@@ -7,6 +7,7 @@ __email__ = "emasuncion1@up.edu.ph"
 
 # Package to be able to use RegEx
 import re
+import os
 
 # Define classes, methods, and variables
 # ----------------------------------------------------------------
@@ -14,6 +15,36 @@ import re
 class UserIO:
     def __init__(self, user_input):
         self.user_input = user_input
+
+    # This function will handle the file input operation only
+    def file_input(self):
+        filename = self.input_fn()
+
+        try:
+            # Check if filename does not end with .ipol (e.g. text.ipol)
+            if not(filename[-5:] == ".ipol"):
+                print("Invalid file")
+            elif os.stat(filename).st_size == 0:
+                print("File is empty")
+            else:
+                # This is a valid .ipol file
+                # Check file
+                self.file_read(filename)
+        except FileNotFoundError:
+            print("File not found")
+        except:
+            print("Invalid file")
+
+    def file_read(self, filename):
+        try:
+            reader = open(filename, 'r') # Open the file on readonly
+            message = reader.read()
+            print(message)
+            reader.close()
+        except FileNotFoundError:
+            print("File not found")
+        except:
+            print("Invalid file")
 
     def print_fn(self, user_input):
         try:
@@ -34,7 +65,7 @@ class UserIO:
             syntax_incorrect()
 
     def input_fn(self):
-        user_input = input().strip()
+        user_input = input("Enter INTERPOL file (.ipol): ").strip()
         return user_input
 
     def print_user_input(self, user_input):
@@ -87,8 +118,7 @@ class Math:
 # ----------------------------------------------------------------
 # Methods
 def greet_user():
-    print("INTERPOL Compiler")
-    print("Input BEGIN to begin. Input END to end.")
+    print("=======   INTERPOL INTERPRETER STARTED   =======")
 
 def is_ascii(str):
     return all(ord(c) < 128 for c in str)
@@ -96,9 +126,24 @@ def is_ascii(str):
 def syntax_incorrect():
     print("The syntax is incorrect.")
 # ----------------------------------------------------------------
-# Variables
-print_keywords = ["PRINT", "PRINTLN"]
-operator_keywords = ["ADD", "SUB", "MUL", "DIV", "MOD"]
+# Variable Dictionaries
+# User IO
+io_keywords = {
+    "INPUT": "INPUT",
+    "PRINT": "PRINT",
+    "PRINTLN": "OUTPUT_WITH_LINE"
+}
+# Operations
+operator_keywords = {
+    "ADD": "BASIC_OPERATOR_ADD",
+    "SUB": "BASIC_OPERATOR_SUB",
+    "MUL": "BASIC_OPERATOR_MUL",
+    "DIV": "BASIC_OPERATOR_DIV",
+    "RAISE": "ADVANCED_OPERATOR_RAISE",
+    "ROOT": "ADVANCED_OPERATOR_ROOT",
+    "MEAN": "ADVANCED_OPERATOR_MEAN",
+    "DIST": "ADVANCED_OPERATOR_DIST"
+}
 is_first_run = True
 is_compiler_started = False
 user_input = ""
@@ -108,32 +153,34 @@ greet_user()
 user = UserIO("")
 math = Math()
 
-while user_input != "END":
-    user_input = user.input_fn()
-    # This will remove all comments (starting with #) from user input
-    # anywhere on the input except if enclosed on double quotes
-    stripped_input = re.sub(r'\#(?=([^\"]*\"[^\"]*\")*[^\"]*$).+', '',  user_input).strip()
+# Accept the IPOL file
+# ipol_file = user.file_input()
+user.file_input()
 
-    if stripped_input == "END":
-        print("Ending program.")
-    elif is_first_run and stripped_input == "BEGIN":
-        print("Starting program.")
-        is_first_run = False
-        is_compiler_started = True
-    elif stripped_input == "BEGIN":
-        # Do nothing if BEGIN is entered again
-        pass
-    elif is_compiler_started:
-        keyword = " ".join(stripped_input.split())
-        keyword = keyword.split(' ')
-        if keyword[0] in print_keywords:
-            stripped_input = " ".join(stripped_input.split())
-            user.print_fn(stripped_input)
-        elif keyword[0] in operator_keywords:
-            math.arithmetic(keyword)
-        elif user_input and user_input[0] == "#":
-            pass
-        else:
-            syntax_incorrect()
-    else:
-        greet_user()
+# This will remove all comments (starting with #) from user input
+# anywhere on the input except if enclosed on double quotes
+# stripped_input = re.sub(r'\#(?=([^\"]*\"[^\"]*\")*[^\"]*$).+', '',  user_input).strip()
+
+# if stripped_input == "END":
+#     print("Ending program.")
+# elif is_first_run and stripped_input == "BEGIN":
+#     print("Starting program.")
+#     is_first_run = False
+#     is_compiler_started = True
+# elif stripped_input == "BEGIN":
+#     # Do nothing if BEGIN is entered again
+#     pass
+# elif is_compiler_started:
+#     keyword = " ".join(stripped_input.split())
+#     keyword = keyword.split(' ')
+#     if keyword[0] in io_keywords:
+#         stripped_input = " ".join(stripped_input.split())
+#         user.print_fn(stripped_input)
+#     elif keyword[0] in operator_keywords:
+#         math.arithmetic(keyword)
+#     elif user_input and user_input[0] == "#":
+#         pass
+#     else:
+#         syntax_incorrect()
+# else:
+#     greet_user()
