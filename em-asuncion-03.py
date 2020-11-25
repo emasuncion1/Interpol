@@ -29,22 +29,28 @@ class UserIO:
             else:
                 # This is a valid .ipol file
                 # Check file
+                print("\n=======   INTERPOL OUTPUT   =======")
+                print("\n-------   OUTPUT START   --------->")
+
                 self.file_read(filename)
+
+                print("<------   OUTPUT END   ----------\n")
         except FileNotFoundError:
             print("File not found")
         except:
             print("Invalid file")
 
     def file_read(self, filename):
-        try:
-            reader = open(filename, 'r') # Open the file on readonly
-            message = reader.read()
-            print(message)
-            reader.close()
-        except FileNotFoundError:
-            print("File not found")
-        except:
-            print("Invalid file")
+        with open(filename) as file:
+            lines = file.readlines()
+
+        for n, line in enumerate(lines, 1):
+            commands.append(line.rstrip())
+
+        if not(commands[0] == "BEGIN"):
+            syntax_incorrect()
+        elif not(commands[-1] == "END"):
+            print("Invalid end of file")
 
     def print_fn(self, user_input):
         try:
@@ -65,7 +71,12 @@ class UserIO:
             syntax_incorrect()
 
     def input_fn(self):
-        user_input = input("Enter INTERPOL file (.ipol): ").strip()
+        global is_first_run
+        if is_first_run:
+            user_input = input("Enter INTERPOL file (.ipol): ").strip()
+            is_first_run = False
+        else:
+            user_input = input().strip()
         return user_input
 
     def print_user_input(self, user_input):
@@ -147,6 +158,7 @@ operator_keywords = {
 is_first_run = True
 is_compiler_started = False
 user_input = ""
+commands = []
 
 # Start of the program
 greet_user()
