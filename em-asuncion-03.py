@@ -142,6 +142,17 @@ class Declaration:
             else:
                 user_variables[array[1]] = 0
 
+class Assignment:
+    def assign_operations(self, array):
+        if len(array) > 4:
+            syntax_incorrect()
+        elif array[3] not in user_variables:
+            syntax_incorrect()
+        elif re.search(r'-?\d+', array[1]):
+            user_variables[array[3]] = int(array[1])
+        else:
+            user_variables[array[3]] = array[1]
+
 # ----------------------------------------------------------------
 # Methods
 def greet_user():
@@ -160,7 +171,7 @@ var_declaration_keywords = {
     "VARINT": "DECLARATION_INT"
 }
 # Assignment
-assignment_keywords = {
+assignment_keyword = {
     "STORE": "ASSIGN_KEY"
 }
 # User IO
@@ -192,6 +203,7 @@ greet_user()
 user = UserIO("")
 math = Math()
 variable = Declaration()
+assignment = Assignment()
 
 # Accept the IPOL file
 # ipol_file = user.file_input()
@@ -205,6 +217,8 @@ for command in commands:
     # print(keyword)
     if keyword[0] in var_declaration_keywords:
         variable.var_declaration(keyword)
+    elif keyword[0] in assignment_keyword:
+        assignment.assign_operations(keyword)
 
 print(user_variables)
 

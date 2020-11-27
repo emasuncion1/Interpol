@@ -3,4 +3,6 @@ VARSTR stringx WITH [This is a string]
 VARINT intx WITH ADD 1 1
 VARSTR x
 VARINT y
+STORE 100 IN x
+STORE [pagod] IN x
 END
