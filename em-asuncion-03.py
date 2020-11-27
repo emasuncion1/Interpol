@@ -29,12 +29,11 @@ class UserIO:
             else:
                 # This is a valid .ipol file
                 # Check file
-                print("\n=======   INTERPOL OUTPUT   =======")
-                print("\n-------   OUTPUT START   --------->")
-
                 self.file_read(filename)
-
-                print("<------   OUTPUT END   ----------\n")
+                # Remove BEGIN and END
+                commands.pop(0)
+                commands.pop(-1)
+                return
         except FileNotFoundError:
             print("File not found")
         except:
@@ -91,41 +90,58 @@ class Math:
             if len(array) > 3 or len(array) == 1:
                 syntax_incorrect()
             elif number1 and number2: # Make sure number1 and number2 are not null
-                if keyword[0] == "ADD":
-                    self.add(number1, number2)
-                elif keyword[0] == "SUB":
-                    self.subtract(number1, number2)
-                elif keyword[0] == "MUL":
-                    self.multiply(number1, number2)
-                elif keyword[0] == "DIV":
-                    self.divide(number1, number2)
-                elif keyword[0] == "MOD":
-                    self.modulo(number1, number2)
+                if array[0] == "MUL":
+                    return self.multiply(number1, number2)
+                elif array[0] == "DIV":
+                    return self.divide(number1, number2)
+                elif array[0] == "MOD":
+                    return self.modulo(number1, number2)
+                elif array[0] == "ADD":
+                    return self.add(number1, number2)
+                elif array[0] == "SUB":
+                    return self.subtract(number1, number2)
             else:
                 syntax_incorrect()
         except:
             syntax_incorrect()
 
     def add(self, x, y):
-        print(int(x) + int(y))
+        return int(x) + int(y)
 
     def subtract(self, x, y):
-        print(int(x) - int(y))
+        return int(x) - int(y)
 
     def multiply(self, x, y):
-        print(int(x) * int(y))
+        return int(x) * int(y)
 
     def divide(self, x, y):
         try:
             if y == "0":
                 print("Error: Division by zero.")
             else:
-                print(int(x) / int(y))
+                return int(x) / int(y)
         except:
             syntax_incorrect()
 
     def modulo(self, x, y):
-        print(int(x) % int(y))
+        return int(x) % int(y)
+
+class Declaration:
+    def var_declaration(self, array):
+        if array[0] == "VARSTR":
+            if len(array) > 2:
+                user_variables[array[1]] = array[3]
+            else:
+                user_variables[array[1]] = ""
+        elif array[0] == "VARINT":
+            if len(array) == 2:
+                user_variables[array[1]] = 0
+            elif (len(array) > 2) and (array[3] in operator_keywords):
+                math_array = [array[3], array[4], array[5]]
+                user_variables[array[1]] = math.arithmetic(math_array)
+            else:
+                user_variables[array[1]] = 0
+
 # ----------------------------------------------------------------
 # Methods
 def greet_user():
@@ -138,6 +154,15 @@ def syntax_incorrect():
     print("The syntax is incorrect.")
 # ----------------------------------------------------------------
 # Variable Dictionaries
+# Variable Declarations
+var_declaration_keywords = {
+    "VARSTR": "DECLARATION_STRING",
+    "VARINT": "DECLARATION_INT"
+}
+# Assignment
+assignment_keywords = {
+    "STORE": "ASSIGN_KEY"
+}
 # User IO
 io_keywords = {
     "INPUT": "INPUT",
@@ -150,6 +175,7 @@ operator_keywords = {
     "SUB": "BASIC_OPERATOR_SUB",
     "MUL": "BASIC_OPERATOR_MUL",
     "DIV": "BASIC_OPERATOR_DIV",
+    "MOD": "BASIC_OPERATOR_MOD",
     "RAISE": "ADVANCED_OPERATOR_RAISE",
     "ROOT": "ADVANCED_OPERATOR_ROOT",
     "MEAN": "ADVANCED_OPERATOR_MEAN",
@@ -159,15 +185,30 @@ is_first_run = True
 is_compiler_started = False
 user_input = ""
 commands = []
+user_variables =  {}
 
 # Start of the program
 greet_user()
 user = UserIO("")
 math = Math()
+variable = Declaration()
 
 # Accept the IPOL file
 # ipol_file = user.file_input()
 user.file_input()
+
+print("\n=======   INTERPOL OUTPUT   =======")
+print("\n-------   OUTPUT START   --------->")
+
+for command in commands:
+    keyword = re.split('\\s+(?![^\\[]*\\])', command)
+    # print(keyword)
+    if keyword[0] in var_declaration_keywords:
+        variable.var_declaration(keyword)
+
+print(user_variables)
+
+print("<------   OUTPUT END   ----------\n")
 
 # This will remove all comments (starting with #) from user input
 # anywhere on the input except if enclosed on double quotes

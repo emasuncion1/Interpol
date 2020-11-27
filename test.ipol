@@ -1,0 +1,6 @@
+BEGIN
+VARSTR stringx WITH [This is a string]
+VARINT intx WITH ADD 1 1
+VARSTR x
+VARINT y
+END
