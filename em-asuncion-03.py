@@ -84,25 +84,30 @@ class UserIO:
 
 class Math:
     def arithmetic(self, array):
-        try:
-            number1 = array[1]
-            number2 = array[2]
-            if len(array) > 3 or len(array) == 1:
-                syntax_incorrect()
-            elif number1 and number2: # Make sure number1 and number2 are not null
-                if array[0] == "MUL":
-                    return self.multiply(number1, number2)
-                elif array[0] == "DIV":
-                    return self.divide(number1, number2)
-                elif array[0] == "MOD":
-                    return self.modulo(number1, number2)
-                elif array[0] == "ADD":
-                    return self.add(number1, number2)
-                elif array[0] == "SUB":
-                    return self.subtract(number1, number2)
-            else:
-                syntax_incorrect()
-        except:
+        number1 = array[1]
+        number2 = array[2]
+        if len(array) > 3 or len(array) == 1:
+            syntax_incorrect()
+        elif number1 and number2: # Make sure number1 and number2 are not null
+            if array[0] == "MUL":
+                return self.multiply(number1, number2)
+            elif array[0] == "DIV":
+                return self.divide(number1, number2)
+            elif array[0] == "MOD":
+                return self.modulo(number1, number2)
+            elif array[0] == "ADD":
+                return self.add(number1, number2)
+            elif array[0] == "SUB":
+                return self.subtract(number1, number2)
+            elif array[0] == "RAISE":
+                return self.math_raise(number1, number2)
+            elif array[0] == "ROOT":
+                return self.root(number1, number2)
+            # elif array[0] == "MEAN":
+            #     return self.mean(*args)
+            # elif array[0] == "DIST":
+            #     return self.dist(number1, number2, number3, number4)
+        else:
             syntax_incorrect()
 
     def add(self, x, y):
@@ -125,6 +130,12 @@ class Math:
 
     def modulo(self, x, y):
         return int(x) % int(y)
+
+    def math_raise(self, x, y):
+        return int(x) ** int(y)
+
+    def root(self, x, y):
+        return int(int(y) ** (1 / int(x)))
 
 class Declaration:
     def var_declaration(self, array):

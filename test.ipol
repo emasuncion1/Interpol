@@ -1,6 +1,7 @@
 BEGIN
 VARSTR stringx WITH [This is a string]
 VARINT intx WITH ADD 1 1
+VARINT intz WITH ROOT 16 2
 VARSTR x
 VARINT y
 STORE 100 IN x
