@@ -151,8 +151,7 @@ class Declaration:
                 if len(array) == 2:
                     user_variables[array[1]] = 0
                 elif (len(array) > 2) and (array[3] in operator_keywords):
-                    math_array = [array[3], array[4], array[5]]
-                    user_variables[array[1]] = math.arithmetic(math_array)
+                    user_variables[array[1]] = math.arithmetic(array[3:])
                 elif len(array) > 2:
                     if (not type(array[3]) is int):
                         raise Exception
@@ -176,7 +175,7 @@ class Assignment:
                     raise Exception
                 user_variables[array[3]] = int(array[1])
             elif type(user_variables.get(array[3])) is str:
-                if array[1].startswith("["):
+                if not array[1].startswith("["):
                     raise Exception
                 user_variables[array[3]] = array[1]
             else:
