@@ -177,9 +177,6 @@ class Assignment:
                 user_variables[array[3]] = int(array[1])
             elif type(user_variables.get(array[3])) is str:
                 if array[1].startswith("["):
-                    key = array[1][1:-1]
-                    user_variables[array[3]] = user_variables.get(key)
-                else:
                     raise Exception
                 user_variables[array[3]] = array[1]
             else:
