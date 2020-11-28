@@ -139,30 +139,53 @@ class Math:
 
 class Declaration:
     def var_declaration(self, array):
-        if array[0] == "VARSTR":
-            if len(array) > 2:
-                user_variables[array[1]] = array[3]
-            else:
-                user_variables[array[1]] = ""
-        elif array[0] == "VARINT":
-            if len(array) == 2:
-                user_variables[array[1]] = 0
-            elif (len(array) > 2) and (array[3] in operator_keywords):
-                math_array = [array[3], array[4], array[5]]
-                user_variables[array[1]] = math.arithmetic(math_array)
-            else:
-                user_variables[array[1]] = 0
+        try:
+            if array[0] == "VARSTR":
+                if len(array) > 2:
+                    if not array[3].startswith("["):
+                        raise Exception
+                    user_variables[array[1]] = array[3]
+                else:
+                    user_variables[array[1]] = ""
+            elif array[0] == "VARINT":
+                if len(array) == 2:
+                    user_variables[array[1]] = 0
+                elif (len(array) > 2) and (array[3] in operator_keywords):
+                    math_array = [array[3], array[4], array[5]]
+                    user_variables[array[1]] = math.arithmetic(math_array)
+                elif len(array) > 2:
+                    if (not type(array[3]) is int):
+                        raise Exception
+                    user_variables[array[1]] = array[3]
+                else:
+                    user_variables[array[1]] = 0
+        except Exception:
+            print(f"Invalid expression at line number {index + 2}")
 
 class Assignment:
-    def assign_operations(self, array):
-        if len(array) > 4:
-            syntax_incorrect()
-        elif array[3] not in user_variables:
-            syntax_incorrect()
-        elif re.search(r'-?\d+', array[1]):
-            user_variables[array[3]] = int(array[1])
-        else:
-            user_variables[array[3]] = array[1]
+    def assign_operations(self, array, index):
+        try:
+            if len(array) > 4:
+                syntax_incorrect()
+            elif array[3] not in user_variables:
+                print(f"Variable is not declared at line number {index + 2}")
+            elif (re.search(r'-?\d+', array[1]) and
+                type(user_variables.get(array[3])) is int):
+                if (array[1].startswith("[") or array[1].startswith("\"")
+                        or array[1].startswith("\'")):
+                    raise Exception
+                user_variables[array[3]] = int(array[1])
+            elif type(user_variables.get(array[3])) is str:
+                if array[1].startswith("["):
+                    key = array[1][1:-1]
+                    user_variables[array[3]] = user_variables.get(key)
+                else:
+                    raise Exception
+                user_variables[array[3]] = array[1]
+            else:
+                raise Exception
+        except Exception:
+            print(f"Incompatible data type at line number {index + 2}")
 
 # ----------------------------------------------------------------
 # Methods
@@ -223,13 +246,12 @@ user.file_input()
 print("\n=======   INTERPOL OUTPUT   =======")
 print("\n-------   OUTPUT START   --------->")
 
-for command in commands:
+for index, command in enumerate(commands):
     keyword = re.split('\\s+(?![^\\[]*\\])', command)
-    # print(keyword)
     if keyword[0] in var_declaration_keywords:
         variable.var_declaration(keyword)
     elif keyword[0] in assignment_keyword:
-        assignment.assign_operations(keyword)
+        assignment.assign_operations(keyword, index)
 
 print(user_variables)
 
