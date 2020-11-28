@@ -84,31 +84,43 @@ class UserIO:
 
 class Math:
     def arithmetic(self, array):
-        number1 = array[1]
-        number2 = array[2]
-        if len(array) > 3 or len(array) == 1:
-            syntax_incorrect()
-        elif number1 and number2: # Make sure number1 and number2 are not null
-            if array[0] == "MUL":
-                return self.multiply(number1, number2)
-            elif array[0] == "DIV":
-                return self.divide(number1, number2)
-            elif array[0] == "MOD":
-                return self.modulo(number1, number2)
-            elif array[0] == "ADD":
-                return self.add(number1, number2)
-            elif array[0] == "SUB":
-                return self.subtract(number1, number2)
-            elif array[0] == "RAISE":
-                return self.math_raise(number1, number2)
-            elif array[0] == "ROOT":
-                return self.root(number1, number2)
-            # elif array[0] == "MEAN":
-            #     return self.mean(*args)
-            # elif array[0] == "DIST":
-            #     return self.dist(number1, number2, number3, number4)
-        else:
-            syntax_incorrect()
+        counter_array = []
+        number1 = 0
+        number2 = 0
+        number = 0
+
+        # Get the index positions of adjacent keywords and store in a list
+        for index, keyword in enumerate(array):
+            if keyword in operator_keywords:
+                counter_array.append(index)
+
+        counter_array = list(dict.fromkeys(counter_array))
+        # print(counter_array)
+
+        for index_of_keyword in reversed(counter_array):
+            number1 = array[index_of_keyword + 1]
+            number2 = array[index_of_keyword + 2]
+            if array[index_of_keyword] == "MUL":
+                array[index_of_keyword] = self.multiply(number1, number2)
+            elif array[index_of_keyword] == "DIV":
+                array[index_of_keyword] = self.divide(number1, number2)
+            elif array[index_of_keyword] == "MOD":
+                array[index_of_keyword] = self.modulo(number1, number2)
+            elif array[index_of_keyword] == "ADD":
+                array[index_of_keyword] = self.add(number1, number2)
+            elif array[index_of_keyword] == "SUB":
+                array[index_of_keyword] = self.subtract(number1, number2)
+            elif array[index_of_keyword] == "RAISE":
+                array[index_of_keyword] = self.math_raise(number1, number2)
+            elif array[index_of_keyword] == "ROOT":
+                array[index_of_keyword] = self.root(number1, number2)
+            # elif array[index_of_keyword] == "MEAN":
+            #     array[index_of_keyword] = self.mean(*args)
+            # elif array[index_of_keyword] == "DIST":
+            #     array[index_of_keyword] = self.dist(number1, number2, number3, number4)
+            number = array[index_of_keyword]
+
+        return int(number)
 
     def add(self, x, y):
         return int(x) + int(y)
@@ -135,7 +147,7 @@ class Math:
         return int(x) ** int(y)
 
     def root(self, x, y):
-        return int(int(y) ** (1 / int(x)))
+        return int(y) ** (1 / int(x))
 
 class Declaration:
     def var_declaration(self, array):
