@@ -52,23 +52,42 @@ class UserIO:
         elif not(commands[-1] == "END"):
             print("Invalid end of file")
 
-    def print_fn(self, user_input):
-        try:
-            array_word = user_input.split(' ', 1)
-            print_keyword = array_word[0]
-            word_string = array_word[1]
-            if len(array_word) > 2 or len(array_word) == 1:
-                syntax_incorrect()
-            elif not(word_string.startswith('"') and word_string.endswith('"') and is_ascii(word_string)):
-                syntax_incorrect()
-            elif print_keyword == "PRINT":
-                word = self.print_user_input(word_string)
-                print(word)
+    def io_operations(self, command):
+        # command = convert_exp_to_value(command)
+        keyword = command[0]
+
+        for index, item in enumerate(command):
+            if item in user_variables:
+                command[index] = str(user_variables.get(item))
+
+        if keyword == "PRINT":
+            if command[1].startswith("[") and command[1].endswith("]"):
+                print(self.print_user_input(command[1]))
             else:
-                word = self.print_user_input(word_string)
-                print(f"{word}\n")
-        except:
-            syntax_incorrect()
+                print(command[1])
+        elif keyword == "PRINTLN":
+            if command[1].startswith("[") and command[1].endswith("]"):
+                print(self.print_user_input(command[1]) + "\n")
+            else:
+                print(command[1] + "\n")
+
+    # def print_fn(self, user_input):
+    #     try:
+    #         array_word = user_input.split(' ', 1)
+    #         print_keyword = array_word[0]
+    #         word_string = array_word[1]
+    #         if len(array_word) > 2 or len(array_word) == 1:
+    #             syntax_incorrect()
+    #         elif not(word_string.startswith('"') and word_string.endswith('"') and is_ascii(word_string)):
+    #             syntax_incorrect()
+    #         elif print_keyword == "PRINT":
+    #             word = self.print_user_input(word_string)
+    #             print(word)
+    #         else:
+    #             word = self.print_user_input(word_string)
+    #             print(f"{word}\n")
+    #     except:
+    #         syntax_incorrect()
 
     def input_fn(self):
         global is_first_run
@@ -254,6 +273,13 @@ def is_ascii(str):
 
 def syntax_incorrect():
     print("The syntax is incorrect.")
+
+def convert_exp_to_value(array):
+    for index, item in enumerate(array):
+        if item in user_variables:
+            array[index] = str(user_variables.get(item))
+
+    return array
 # ----------------------------------------------------------------
 # Variable Dictionaries
 # Variable Declarations
@@ -283,6 +309,7 @@ operator_keywords = {
     "MEAN": "ADVANCED_OPERATOR_MEAN",
     "DIST": "ADVANCED_OPERATOR_DIST"
 }
+
 is_first_run = True
 is_compiler_started = False
 user_input = ""
@@ -314,10 +341,12 @@ for index, command in enumerate(commands):
                 variable.var_declaration(keyword)
             elif keyword[0] in assignment_keyword: # STORE keyword
                 assignment.assign_operations(keyword, index)
+            elif keyword[0] in io_keywords: # INPUT/PRINT/PRINTLN keywords
+                user.io_operations(keyword)
     except Exception:
         print(f"Invalid expression at line number [ {index} ]")
 
-print(f"user_variables: {user_variables}")
+# print(f"user_variables: {user_variables}")
 
 print("<------   OUTPUT END   ----------\n")
 print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
