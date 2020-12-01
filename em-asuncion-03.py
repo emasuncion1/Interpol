@@ -97,10 +97,19 @@ class Math:
 
         counter_array = list(dict.fromkeys(counter_array))
 
+        for index, var in enumerate(array):
+            if var in user_variables:
+                array[index] = str(user_variables.get(var))
+
         for index_of_keyword in reversed(counter_array):
             number1 = array[index_of_keyword + 1]
             number2 = array[index_of_keyword + 2]
             numbers_arr = array[index_of_keyword + 1:]
+
+            if number1 in user_variables:
+                number1 = user_variables.get(number1)
+            elif number2 in user_variables:
+                number2 = user_variables.get(number2)
 
             if array[index_of_keyword] == "MUL":
                 array[index_of_keyword] = self.multiply(number1, number2)
@@ -180,28 +189,36 @@ class Declaration:
     def var_declaration(self, array):
         try:
             if array[0] == "VARSTR":
-                if len(array) > 2:
+                if len(array) == 2:
+                    user_variables[array[1]] = ""
+                elif len(array) > 2:
                     if not array[3].startswith("["):
                         raise Exception
                     user_variables[array[1]] = array[3]
-                else:
-                    user_variables[array[1]] = ""
+                elif (not (array[2] == "WITH")) and (len(array) > 2):
+                    raise Exception
             elif array[0] == "VARINT":
                 if len(array) == 2:
                     user_variables[array[1]] = 0
+                elif (not (array[2] == "WITH")) and (len(array) > 2):
+                    raise Exception
                 elif (len(array) > 2) and (array[3] in operator_keywords):
                     user_variables[array[1]] = math.arithmetic(array[3:])
                 elif len(array) > 2:
                     if (not type(array[3]) is int):
                         raise Exception
                     user_variables[array[1]] = array[3]
-                else:
-                    user_variables[array[1]] = 0
         except Exception:
             print(f"Invalid expression at line number [ {index + 2} ]")
 
 class Assignment:
     def assign_operations(self, array, index):
+        try:
+            if array[1] in user_variables:
+                array[1] = str(user_variables.get(array[1]))
+        except Exception:
+            print(f"Variable is not declared at line number {index + 2}")
+
         try:
             if len(array) > 4:
                 syntax_incorrect()
