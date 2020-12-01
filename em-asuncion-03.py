@@ -97,47 +97,52 @@ class Math:
 
         counter_array = list(dict.fromkeys(counter_array))
 
-        for index, var in enumerate(array):
-            if var in user_variables:
-                array[index] = str(user_variables.get(var))
+        try:
+            # Substitute the variables to its equivalent value
+            # if it is used as an expression
+            for index, var in enumerate(array):
+                if var in user_variables:
+                    array[index] = str(user_variables.get(var))
 
-        for index_of_keyword in reversed(counter_array):
-            number1 = array[index_of_keyword + 1]
-            number2 = array[index_of_keyword + 2]
-            numbers_arr = array[index_of_keyword + 1:]
+            for index_of_keyword in reversed(counter_array):
+                number1 = array[index_of_keyword + 1]
+                number2 = array[index_of_keyword + 2]
+                numbers_arr = array[index_of_keyword + 1:]
 
-            if number1 in user_variables:
-                number1 = user_variables.get(number1)
-            elif number2 in user_variables:
-                number2 = user_variables.get(number2)
+                if number1 in user_variables:
+                    number1 = user_variables.get(number1)
+                elif number2 in user_variables:
+                    number2 = user_variables.get(number2)
 
-            if array[index_of_keyword] == "MUL":
-                array[index_of_keyword] = self.multiply(number1, number2)
-            elif array[index_of_keyword] == "DIV":
-                array[index_of_keyword] = self.divide(number1, number2)
-            elif array[index_of_keyword] == "MOD":
-                array[index_of_keyword] = self.modulo(number1, number2)
-            elif array[index_of_keyword] == "ADD":
-                array[index_of_keyword] = self.add(number1, number2)
-            elif array[index_of_keyword] == "SUB":
-                array[index_of_keyword] = self.subtract(number1, number2)
-            elif array[index_of_keyword] == "RAISE":
-                array[index_of_keyword] = self.math_raise(number1, number2)
-            elif array[index_of_keyword] == "ROOT":
-                array[index_of_keyword] = self.root(number1, number2)
-            elif array[index_of_keyword] == "MEAN":
-                array[index_of_keyword] = self.mean(numbers_arr)
-            elif array[index_of_keyword] == "DIST":
-                if numbers_arr[2] == "AND":
-                    numbers_arr.pop(2)
-                array[index_of_keyword] = self.dist(numbers_arr)
+                if array[index_of_keyword] == "MUL":
+                    array[index_of_keyword] = self.multiply(number1, number2)
+                elif array[index_of_keyword] == "DIV":
+                    array[index_of_keyword] = self.divide(number1, number2)
+                elif array[index_of_keyword] == "MOD":
+                    array[index_of_keyword] = self.modulo(number1, number2)
+                elif array[index_of_keyword] == "ADD":
+                    array[index_of_keyword] = self.add(number1, number2)
+                elif array[index_of_keyword] == "SUB":
+                    array[index_of_keyword] = self.subtract(number1, number2)
+                elif array[index_of_keyword] == "RAISE":
+                    array[index_of_keyword] = self.math_raise(number1, number2)
+                elif array[index_of_keyword] == "ROOT":
+                    array[index_of_keyword] = self.root(number1, number2)
+                elif array[index_of_keyword] == "MEAN":
+                    array[index_of_keyword] = self.mean(numbers_arr)
+                elif array[index_of_keyword] == "DIST":
+                    if numbers_arr[2] == "AND":
+                        numbers_arr.pop(2)
+                    array[index_of_keyword] = self.dist(numbers_arr)
 
-            number = array[index_of_keyword]
+                number = array[index_of_keyword]
 
-            if array[index_of_keyword + 1]:
-                array = self.pop_num_in_list(array, index_of_keyword)
+                if array[index_of_keyword + 1]:
+                    array = self.pop_num_in_list(array, index_of_keyword)
 
-        return int(number)
+            return int(number)
+        except Exception:
+            print("Invalid arithmetic operation")
 
     def add(self, x, y):
         return int(x) + int(y)
@@ -283,6 +288,7 @@ is_compiler_started = False
 user_input = ""
 commands = []
 user_variables =  {}
+reserved_keys = {**var_declaration_keywords, **assignment_keyword, **io_keywords, **operator_keywords}
 
 # Start of the program
 greet_user()
@@ -295,19 +301,26 @@ assignment = Assignment()
 # ipol_file = user.file_input()
 user.file_input()
 
-print("\n=======   INTERPOL OUTPUT   =======")
+print("\n========   INTERPOL OUTPUT   ========")
 print("\n-------   OUTPUT START   --------->")
 
 for index, command in enumerate(commands):
     keyword = re.split('\\s+(?![^\\[]*\\])', command)
-    if keyword[0] in var_declaration_keywords:
-        variable.var_declaration(keyword)
-    elif keyword[0] in assignment_keyword:
-        assignment.assign_operations(keyword, index)
+    try:
+        if keyword[1] in reserved_keys:
+            raise Exception
+        else:
+            if keyword[0] in var_declaration_keywords: # VARSTR and VARINT keyword
+                variable.var_declaration(keyword)
+            elif keyword[0] in assignment_keyword: # STORE keyword
+                assignment.assign_operations(keyword, index)
+    except Exception:
+        print(f"Invalid expression at line number [ {index} ]")
 
 print(f"user_variables: {user_variables}")
 
 print("<------   OUTPUT END   ----------\n")
+print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
 
 # This will remove all comments (starting with #) from user input
 # anywhere on the input except if enclosed on double quotes
