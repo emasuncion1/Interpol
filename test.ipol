@@ -1,5 +1,5 @@
 BEGIN
-VARSTR stringx WITH [This is a string]
+VARSTR stringx WITH [#This is a string] #test
 VARINT intx WITH ADD 1 1
 VARINT intz WITH ROOT 16 2
 VARSTR x

@@ -8,6 +8,7 @@ __email__ = "emasuncion1@up.edu.ph"
 # Package to be able to use RegEx
 import re
 import os
+import sys
 import math as m
 
 # Define classes, methods, and variables
@@ -45,7 +46,8 @@ class UserIO:
             lines = file.readlines()
 
         for n, line in enumerate(lines, 1):
-            commands.append(line.rstrip())
+            line = re.sub(r'\#(?=([^\[\]]*\[[^\[\]]*\[)*[^\[\]]*$).+', '',  line).strip()
+            commands.append(line)
 
         if not(commands[0] == "BEGIN"):
             syntax_incorrect()
@@ -53,41 +55,29 @@ class UserIO:
             print("Invalid end of file")
 
     def io_operations(self, command):
-        # command = convert_exp_to_value(command)
         keyword = command[0]
+
+        try:
+            if keyword == "INPUT":
+                if (user_variables.get(command[1]) is int):
+                    user_variables[command[1]] = int(self.input_fn())
+                else:
+                    user_variables[command[1]] = self.input_fn()
+        except Exception:
+            print(f"Invalid syntax")
 
         for index, item in enumerate(command):
             if item in user_variables:
                 command[index] = str(user_variables.get(item))
 
-        if keyword == "PRINT":
+        if keyword == "PRINT" or keyword == "PRINTLN":
             if command[1].startswith("[") and command[1].endswith("]"):
                 print(self.print_user_input(command[1]))
+            elif command[1] in operator_keywords:
+                value_to_print = math.arithmetic(command[1:])
+                print(str(value_to_print))
             else:
                 print(command[1])
-        elif keyword == "PRINTLN":
-            if command[1].startswith("[") and command[1].endswith("]"):
-                print(self.print_user_input(command[1]) + "\n")
-            else:
-                print(command[1] + "\n")
-
-    # def print_fn(self, user_input):
-    #     try:
-    #         array_word = user_input.split(' ', 1)
-    #         print_keyword = array_word[0]
-    #         word_string = array_word[1]
-    #         if len(array_word) > 2 or len(array_word) == 1:
-    #             syntax_incorrect()
-    #         elif not(word_string.startswith('"') and word_string.endswith('"') and is_ascii(word_string)):
-    #             syntax_incorrect()
-    #         elif print_keyword == "PRINT":
-    #             word = self.print_user_input(word_string)
-    #             print(word)
-    #         else:
-    #             word = self.print_user_input(word_string)
-    #             print(f"{word}\n")
-    #     except:
-    #         syntax_incorrect()
 
     def input_fn(self):
         global is_first_run
@@ -96,6 +86,8 @@ class UserIO:
             is_first_run = False
         else:
             user_input = input().strip()
+            if not is_ascii(user_input):
+                raise Exception
         return user_input
 
     def print_user_input(self, user_input):
@@ -217,7 +209,8 @@ class Declaration:
                     user_variables[array[1]] = ""
                 elif len(array) > 2:
                     if not array[3].startswith("["):
-                        raise Exception
+                        print(f"Invalid expression at line number [ {index + 2} ]")
+                        sys.exit(1)
                     user_variables[array[1]] = array[3]
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
@@ -233,7 +226,7 @@ class Declaration:
                         raise Exception
                     user_variables[array[1]] = array[3]
         except Exception:
-            print(f"Invalid expression at line number [ {index + 2} ]")
+            print(f"Incompatible data type at line number [ {index + 2} ]")
 
 class Assignment:
     def assign_operations(self, array, index):
@@ -241,13 +234,13 @@ class Assignment:
             if array[1] in user_variables:
                 array[1] = str(user_variables.get(array[1]))
         except Exception:
-            print(f"Variable is not declared at line number {index + 2}")
+            print(f"Variable is not declared at line number [ {index + 2} ]")
 
         try:
             if len(array) > 4:
                 syntax_incorrect()
             elif array[3] not in user_variables:
-                print(f"Variable is not declared at line number {index + 2}")
+                print(f"Variable is not declared at line number [ {index + 2} ]")
             elif (re.search(r'-?\d+', array[1]) and
                 type(user_variables.get(array[3])) is int):
                 if (array[1].startswith("[") or array[1].startswith("\"")
@@ -261,7 +254,7 @@ class Assignment:
             else:
                 raise Exception
         except Exception:
-            print(f"Incompatible data type at line number {index + 2}")
+            print(f"Invalid data type at line number [ {index + 2} ]")
 
 # ----------------------------------------------------------------
 # Methods
@@ -272,14 +265,11 @@ def is_ascii(str):
     return all(ord(c) < 128 for c in str)
 
 def syntax_incorrect():
-    print("The syntax is incorrect.")
+    print("Invalid syntax")
 
-def convert_exp_to_value(array):
-    for index, item in enumerate(array):
-        if item in user_variables:
-            array[index] = str(user_variables.get(item))
+def tokens_table(commands):
+    pass
 
-    return array
 # ----------------------------------------------------------------
 # Variable Dictionaries
 # Variable Declarations
@@ -331,10 +321,13 @@ user.file_input()
 print("\n========   INTERPOL OUTPUT   ========")
 print("\n-------   OUTPUT START   --------->")
 
+# Clean the command list
+commands = [x for x in commands if x]
+
 for index, command in enumerate(commands):
     keyword = re.split('\\s+(?![^\\[]*\\])', command)
     try:
-        if keyword[1] in reserved_keys:
+        if (keyword[1] in reserved_keys) and not (keyword[0] in io_keywords):
             raise Exception
         else:
             if keyword[0] in var_declaration_keywords: # VARSTR and VARINT keyword
