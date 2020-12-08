@@ -38,8 +38,10 @@ class UserIO:
                 return
         except FileNotFoundError:
             print("File not found")
+            sys.exit(1)
         except:
             print("Invalid file")
+            sys.exit(1)
 
     def file_read(self, filename):
         with open(filename) as file:
@@ -48,6 +50,7 @@ class UserIO:
         for n, line in enumerate(lines, 1):
             line = re.sub(r'\#(?=([^\[\]]*\[[^\[\]]*\[)*[^\[\]]*$).+', '',  line).strip()
             commands.append(line)
+            commands_copy.append(line)
 
         if not(commands[0] == "BEGIN"):
             syntax_incorrect()
@@ -65,6 +68,7 @@ class UserIO:
                     user_variables[command[1]] = self.input_fn()
         except Exception:
             print(f"Invalid syntax")
+            sys.exit(1)
 
         for index, item in enumerate(command):
             if item in user_variables:
@@ -227,6 +231,7 @@ class Declaration:
                     user_variables[array[1]] = array[3]
         except Exception:
             print(f"Incompatible data type at line number [ {index + 2} ]")
+            sys.exit(1)
 
 class Assignment:
     def assign_operations(self, array, index):
@@ -255,6 +260,7 @@ class Assignment:
                 raise Exception
         except Exception:
             print(f"Invalid data type at line number [ {index + 2} ]")
+            sys.exit(1)
 
 # ----------------------------------------------------------------
 # Methods
@@ -268,14 +274,33 @@ def syntax_incorrect():
     print("Invalid syntax")
 
 def tokens_table(commands):
-    pass
+    print("\n========= INTERPOL LEXEMES/TOKENS TABLE =========")
+    print("LINE NO.\tTOKENS\t\t\tLEXEMES")
+    # print("{lineNo}\t{token}\t\t{lexeme}".format(lineNo="1", token="PROGRAM_BEGIN", lexeme="BEGIN"))
+    # print("{lineNo}\t{token}\t{lexeme}".format(lineNo="1", token="END_OF_STATEMENT", lexeme="EOS"))
+
+    for index, command in enumerate(commands):
+        # print(command, index)
+        for i, cmd in enumerate(command):
+            # print(command)
+            token_val = reserved_keys.get(cmd, "")
+            if cmd.startswith("["):
+                cmd = cmd[1:-1]
+                token_val = "STRING"
+            elif re.search(r'-?\d+', cmd):
+                token_val = "NUMBER"
+            elif token_val == "":
+                token_val = "IDENTIFIER"
+            print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token=token_val, lexeme=cmd))
+        print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token="END_OF_STATEMENT", lexeme="EOS"))
 
 # ----------------------------------------------------------------
 # Variable Dictionaries
 # Variable Declarations
 var_declaration_keywords = {
     "VARSTR": "DECLARATION_STRING",
-    "VARINT": "DECLARATION_INT"
+    "VARINT": "DECLARATION_INT",
+    "WITH": "DECLARATION_ASSIGN_WITH_KEY"
 }
 # Assignment
 assignment_keyword = {
@@ -300,12 +325,19 @@ operator_keywords = {
     "DIST": "ADVANCED_OPERATOR_DIST"
 }
 
+program_keywords = {
+    "BEGIN": "PROGRAM_BEGIN",
+    "END": "PROGRAM_END"
+}
+
 is_first_run = True
 is_compiler_started = False
 user_input = ""
 commands = []
+commands_copy = []
+token_commands = []
 user_variables =  {}
-reserved_keys = {**var_declaration_keywords, **assignment_keyword, **io_keywords, **operator_keywords}
+reserved_keys = {**program_keywords, **var_declaration_keywords, **assignment_keyword, **io_keywords, **operator_keywords}
 
 # Start of the program
 greet_user()
@@ -326,6 +358,7 @@ commands = [x for x in commands if x]
 
 for index, command in enumerate(commands):
     keyword = re.split('\\s+(?![^\\[]*\\])', command)
+
     try:
         if (keyword[1] in reserved_keys) and not (keyword[0] in io_keywords):
             raise Exception
@@ -336,38 +369,18 @@ for index, command in enumerate(commands):
                 assignment.assign_operations(keyword, index)
             elif keyword[0] in io_keywords: # INPUT/PRINT/PRINTLN keywords
                 user.io_operations(keyword)
+            elif keyword[0].startswith("\#"):
+                pass
     except Exception:
         print(f"Invalid expression at line number [ {index} ]")
 
-# print(f"user_variables: {user_variables}")
-
 print("<------   OUTPUT END   ----------\n")
+
+# Output the lexemes/tokens table
+for command in commands_copy:
+    keyword = re.split('\\s+(?![^\\[]*\\])', command)
+    token_commands.append(keyword)
+
+tokens_table(token_commands)
+
 print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
-
-# This will remove all comments (starting with #) from user input
-# anywhere on the input except if enclosed on double quotes
-# stripped_input = re.sub(r'\#(?=([^\"]*\"[^\"]*\")*[^\"]*$).+', '',  user_input).strip()
-
-# if stripped_input == "END":
-#     print("Ending program.")
-# elif is_first_run and stripped_input == "BEGIN":
-#     print("Starting program.")
-#     is_first_run = False
-#     is_compiler_started = True
-# elif stripped_input == "BEGIN":
-#     # Do nothing if BEGIN is entered again
-#     pass
-# elif is_compiler_started:
-#     keyword = " ".join(stripped_input.split())
-#     keyword = keyword.split(' ')
-#     if keyword[0] in io_keywords:
-#         stripped_input = " ".join(stripped_input.split())
-#         user.print_fn(stripped_input)
-#     elif keyword[0] in operator_keywords:
-#         math.arithmetic(keyword)
-#     elif user_input and user_input[0] == "#":
-#         pass
-#     else:
-#         syntax_incorrect()
-# else:
-#     greet_user()
