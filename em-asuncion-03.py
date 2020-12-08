@@ -294,6 +294,16 @@ def tokens_table(commands):
             print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token=token_val, lexeme=cmd))
         print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token="END_OF_STATEMENT", lexeme="EOS"))
 
+def symbols_table(variables):
+    print("\n================= SYMBOLS TABLE =================")
+    print("VARIABLE NAME\tTYPE\tVALUE")
+
+    for var in variables:
+        if type(variables[var]) is str:
+            print("{varName}\t{type}\t{value}".format(varName=var, type="STRING", value=variables[var]))
+        else:
+            print("{varName}\t{type}\t{value}".format(varName=var, type="INTEGER", value=variables[var]))
+
 # ----------------------------------------------------------------
 # Variable Dictionaries
 # Variable Declarations
@@ -382,5 +392,8 @@ for command in commands_copy:
     token_commands.append(keyword)
 
 tokens_table(token_commands)
+
+# Output symbols table
+symbols_table(user_variables)
 
 print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
