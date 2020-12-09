@@ -255,8 +255,8 @@ class Declaration:
                         array = " ".join(str(e) for e in array)
                         print(f"----> {array}")
                         sys.exit(1)
-                else:
-                    user_variables[array[1]] = array[3]
+                    else:
+                        user_variables[array[1]] = array[3]
         except Exception:
             print(f"Incompatible data type at line number [ {index + 2} ]")
             array = " ".join(str(e) for e in array)
@@ -320,19 +320,21 @@ def tokens_table(commands):
         for i, cmd in enumerate(command):
             # print(command)
             token_val = reserved_keys.get(cmd, "")
-            if cmd.startswith("["):
+            if token_val == "" and  cmd == "":
+                break
+            elif cmd.startswith("["):
                 cmd = cmd[1:-1]
                 token_val = "STRING"
             elif re.search(r'-?\d+', cmd):
                 token_val = "NUMBER"
             elif cmd in special_keys:
                 token_val = special_keys.get(cmd)
-            elif token_val == "":
+            elif token_val == "" and not cmd == "":
                 token_val = "IDENTIFIER"
             print("{:<12} {:<30} {:<40}".format(index + 1, token_val, cmd))
 
         if command[0] == "END":
-            print("{:<12} {:<30} {:<40}".format(index + 1, "END_OF_FILE", "EOF"))
+            print("{:<12} {:<30} {:<40}".format(index + 2, "END_OF_FILE", "EOF"))
         else:
             print("{:<12} {:<30} {:<40}".format(index + 1, "END_OF_STATEMENT", "EOS"))
 

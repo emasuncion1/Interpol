@@ -1,4 +1,8 @@
 BEGIN
-VARINT x
-STORE ADD 1 MEAN 1 2 4 5 6 DIV 6 7 RAISE 5 6 IN x
+PRINT [Enter year of birth: ]
+VARINT birthyear
+INPUT birthyear
+VARSTR lit WITH [You are ]
+VARINT year WITH 2019
+PRINTLN SUB year birthyear
 END
