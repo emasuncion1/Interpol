@@ -80,6 +80,8 @@ class UserIO:
             elif command[1] in operator_keywords:
                 value_to_print = math.arithmetic(command[1:])
                 print(str(value_to_print))
+            elif (command[1] in reserved_keys) and (command[1] not in operator_keywords):
+                raise Exception
             else:
                 print(command[1])
 
@@ -157,7 +159,8 @@ class Math:
 
             return int(number)
         except Exception:
-            print("Invalid arithmetic operation")
+            print(f"Invalid arithmetic operation at line number [ {index + 2} ]")
+            sys.exit(1)
 
     def add(self, x, y):
         return int(x) + int(y)
@@ -171,7 +174,7 @@ class Math:
     def divide(self, x, y):
         try:
             if y == "0":
-                print("Error: Division by zero.")
+                pass
             else:
                 return int(x) / int(y)
         except:
@@ -208,29 +211,54 @@ class Math:
 class Declaration:
     def var_declaration(self, array):
         try:
+            if array[1] in user_variables:
+                print(f"Duplicate variable declaration at line number [ {index + 2} ]")
+                array = " ".join(str(e) for e in array)
+                print(f"----> {array}")
+                sys.exit(1)
+
             if array[0] == "VARSTR":
+                if not is_ascii(array[1]):
+                    print(f"Invalid syntax at line number [ {index + 2} ]")
+                    array = " ".join(str(e) for e in array)
+                    print(f"----> {array}")
+                    sys.exit(1)
+
                 if len(array) == 2:
                     user_variables[array[1]] = ""
                 elif len(array) > 2:
                     if not array[3].startswith("["):
                         print(f"Invalid expression at line number [ {index + 2} ]")
+                        array = " ".join(str(e) for e in array)
+                        print(f"----> {str(array)}")
                         sys.exit(1)
-                    user_variables[array[1]] = array[3]
+                    elif is_ascii(array[3]):
+                        user_variables[array[1]] = array[3]
+                    else:
+                        raise Exception
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
             elif array[0] == "VARINT":
-                if len(array) == 2:
+                if len(array) > 2 and array[3].startswith("["):
+                    raise Exception
+                elif len(array) == 2:
                     user_variables[array[1]] = 0
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
                 elif (len(array) > 2) and (array[3] in operator_keywords):
                     user_variables[array[1]] = math.arithmetic(array[3:])
                 elif len(array) > 2:
-                    if (not type(array[3]) is int):
-                        raise Exception
-                    user_variables[array[1]] = array[3]
+                    if re.search(r'(?:\.\d+)', array[3]): # Check if there is a floating point number
+                        print(f"Invalid data type at line number [ {index + 2} ]")
+                        array = " ".join(str(e) for e in array)
+                        print(f"----> {array}")
+                        sys.exit(1)
+
+                user_variables[array[1]] = array[3]
         except Exception:
             print(f"Incompatible data type at line number [ {index + 2} ]")
+            array = " ".join(str(e) for e in array)
+            print(f"----> {array}")
             sys.exit(1)
 
 class Assignment:
@@ -240,12 +268,18 @@ class Assignment:
                 array[1] = str(user_variables.get(array[1]))
         except Exception:
             print(f"Variable is not declared at line number [ {index + 2} ]")
+            array = " ".join(str(e) for e in array)
+            print(f"----> {array}")
+            sys.exit(1)
 
         try:
             if len(array) > 4:
                 syntax_incorrect()
             elif array[3] not in user_variables:
                 print(f"Variable is not declared at line number [ {index + 2} ]")
+                array = " ".join(str(e) for e in array)
+                print(f"----> {array}")
+                sys.exit(1)
             elif (re.search(r'-?\d+', array[1]) and
                 type(user_variables.get(array[3])) is int):
                 if (array[1].startswith("[") or array[1].startswith("\"")
@@ -300,7 +334,7 @@ def symbols_table(variables):
 
     for var in variables:
         if type(variables[var]) is str:
-            print("{varName}\t{type}\t{value}".format(varName=var, type="STRING", value=variables[var]))
+            print("{varName}\t{type}\t{value}".format(varName=var, type="STRING", value=variables[var][1:-1]))
         else:
             print("{varName}\t{type}\t{value}".format(varName=var, type="INTEGER", value=variables[var]))
 
@@ -314,7 +348,8 @@ var_declaration_keywords = {
 }
 # Assignment
 assignment_keyword = {
-    "STORE": "ASSIGN_KEY"
+    "STORE": "ASSIGN_KEY",
+    "IN": "ASSIGN_VAR_KEY"
 }
 # User IO
 io_keywords = {
@@ -332,7 +367,8 @@ operator_keywords = {
     "RAISE": "ADVANCED_OPERATOR_RAISE",
     "ROOT": "ADVANCED_OPERATOR_ROOT",
     "MEAN": "ADVANCED_OPERATOR_MEAN",
-    "DIST": "ADVANCED_OPERATOR_DIST"
+    "DIST": "ADVANCED_OPERATOR_DIST",
+    "AND": "DISTANCE_SEPARATOR"
 }
 
 program_keywords = {
@@ -381,8 +417,18 @@ for index, command in enumerate(commands):
                 user.io_operations(keyword)
             elif keyword[0].startswith("\#"):
                 pass
+            elif keyword[0] in program_keywords:
+                pass
+            else:
+                print(f"Invalid syntax at line number [ {index + 2} ]")
+                keyword = " ".join(str(e) for e in keyword)
+                print(f"----> {str(keyword)}")
+                sys.exit(1)
     except Exception:
-        print(f"Invalid expression at line number [ {index} ]")
+        print(f"Invalid expression at line number [ {index + 2} ]")
+        keyword = " ".join(str(e) for e in keyword)
+        print(f"----> {str(keyword)}")
+        sys.exit(1)
 
 print("<------   OUTPUT END   ----------\n")
 

@@ -1,0 +1,4 @@
+BEGIN
+VARSTR x WITH [i]
+VARSTR x WITH [i]
+END
