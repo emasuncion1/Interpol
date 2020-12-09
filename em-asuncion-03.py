@@ -26,8 +26,10 @@ class UserIO:
             # Check if filename does not end with .ipol (e.g. text.ipol)
             if not(filename[-5:] == ".ipol"):
                 print("Invalid file")
+                sys.exit(1)
             elif os.stat(filename).st_size == 0:
                 print("File is empty")
+                sys.exit(1)
             else:
                 # This is a valid .ipol file
                 # Check file
@@ -39,7 +41,7 @@ class UserIO:
         except FileNotFoundError:
             print("File not found")
             sys.exit(1)
-        except:
+        except Exception:
             print("Invalid file")
             sys.exit(1)
 
@@ -56,6 +58,7 @@ class UserIO:
             syntax_incorrect()
         elif not(commands[-1] == "END"):
             print("Invalid end of file")
+            sys.exit(1)
 
     def io_operations(self, command):
         keyword = command[0]
