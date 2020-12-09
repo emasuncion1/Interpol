@@ -160,6 +160,8 @@ class Math:
             return int(number)
         except Exception:
             print(f"Invalid arithmetic operation at line number [ {index + 2} ]")
+            array = " ".join(str(e) for e in array)
+            print(f"----> {array}")
             sys.exit(1)
 
     def add(self, x, y):
@@ -228,7 +230,7 @@ class Declaration:
                     user_variables[array[1]] = ""
                 elif len(array) > 2:
                     if not array[3].startswith("["):
-                        print(f"Invalid expression at line number [ {index + 2} ]")
+                        print(f"Invalid data type at line number [ {index + 2} ]")
                         array = " ".join(str(e) for e in array)
                         print(f"----> {str(array)}")
                         sys.exit(1)
@@ -239,10 +241,10 @@ class Declaration:
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
             elif array[0] == "VARINT":
-                if len(array) > 2 and array[3].startswith("["):
-                    raise Exception
-                elif len(array) == 2:
+                if len(array) == 2:
                     user_variables[array[1]] = 0
+                elif len(array) > 2 and array[3].startswith("["):
+                    raise Exception
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
                 elif (len(array) > 2) and (array[3] in operator_keywords):
@@ -253,8 +255,8 @@ class Declaration:
                         array = " ".join(str(e) for e in array)
                         print(f"----> {array}")
                         sys.exit(1)
-
-                user_variables[array[1]] = array[3]
+                else:
+                    user_variables[array[1]] = array[3]
         except Exception:
             print(f"Incompatible data type at line number [ {index + 2} ]")
             array = " ".join(str(e) for e in array)
@@ -264,17 +266,10 @@ class Declaration:
 class Assignment:
     def assign_operations(self, array, index):
         try:
-            if array[1] in user_variables:
-                array[1] = str(user_variables.get(array[1]))
-        except Exception:
-            print(f"Variable is not declared at line number [ {index + 2} ]")
-            array = " ".join(str(e) for e in array)
-            print(f"----> {array}")
-            sys.exit(1)
-
-        try:
-            if len(array) > 4:
-                syntax_incorrect()
+            if array[1] in operator_keywords:
+                value = array[1:]
+                in_index = value.index("IN")
+                user_variables[array[in_index + 2]] = math.arithmetic(array[1:in_index + 1])
             elif array[3] not in user_variables:
                 print(f"Variable is not declared at line number [ {index + 2} ]")
                 array = " ".join(str(e) for e in array)
@@ -296,6 +291,15 @@ class Assignment:
             print(f"Invalid data type at line number [ {index + 2} ]")
             sys.exit(1)
 
+        try:
+            if array[1] in user_variables:
+                array[1] = str(user_variables.get(array[1]))
+        except Exception:
+            print(f"Variable is not declared at line number [ {index + 2} ]")
+            array = " ".join(str(e) for e in array)
+            print(f"----> {array}")
+            sys.exit(1)
+
 # ----------------------------------------------------------------
 # Methods
 def greet_user():
@@ -309,9 +313,7 @@ def syntax_incorrect():
 
 def tokens_table(commands):
     print("\n========= INTERPOL LEXEMES/TOKENS TABLE =========")
-    print("LINE NO.\tTOKENS\t\t\tLEXEMES")
-    # print("{lineNo}\t{token}\t\t{lexeme}".format(lineNo="1", token="PROGRAM_BEGIN", lexeme="BEGIN"))
-    # print("{lineNo}\t{token}\t{lexeme}".format(lineNo="1", token="END_OF_STATEMENT", lexeme="EOS"))
+    print ("{:<12} {:<30} {:<40}".format('LINE NO.','TOKENS','LEXEMES'))
 
     for index, command in enumerate(commands):
         # print(command, index)
@@ -323,20 +325,32 @@ def tokens_table(commands):
                 token_val = "STRING"
             elif re.search(r'-?\d+', cmd):
                 token_val = "NUMBER"
+            elif cmd in special_keys:
+                token_val = special_keys.get(cmd)
             elif token_val == "":
                 token_val = "IDENTIFIER"
-            print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token=token_val, lexeme=cmd))
-        print("{lineNo}\t\t{token}\t\t{lexeme}".format(lineNo=index+1, token="END_OF_STATEMENT", lexeme="EOS"))
+            print("{:<12} {:<30} {:<40}".format(index + 1, token_val, cmd))
+
+        if command[0] == "END":
+            print("{:<12} {:<30} {:<40}".format(index + 1, "END_OF_FILE", "EOF"))
+        else:
+            print("{:<12} {:<30} {:<40}".format(index + 1, "END_OF_STATEMENT", "EOS"))
 
 def symbols_table(variables):
     print("\n================= SYMBOLS TABLE =================")
-    print("VARIABLE NAME\tTYPE\tVALUE")
+    print ("{:<15} {:<20} {:<20}".format('VARIABLE NAME','TYPE','VALUE'))
 
     for var in variables:
+        try:
+            if re.search(r'-?\d+', variables[var]):
+                variables[var] = int(variables[var])
+        except Exception:
+            pass
+
         if type(variables[var]) is str:
-            print("{varName}\t{type}\t{value}".format(varName=var, type="STRING", value=variables[var][1:-1]))
+            print("{:<15} {:<20} {:<20}".format(var, "STRING", variables[var][1:-1]))
         else:
-            print("{varName}\t{type}\t{value}".format(varName=var, type="INTEGER", value=variables[var]))
+            print("{:<15} {:<20} {:<20}".format(var, "INTEGER", variables[var]))
 
 # ----------------------------------------------------------------
 # Variable Dictionaries
@@ -367,13 +381,16 @@ operator_keywords = {
     "RAISE": "ADVANCED_OPERATOR_RAISE",
     "ROOT": "ADVANCED_OPERATOR_ROOT",
     "MEAN": "ADVANCED_OPERATOR_MEAN",
-    "DIST": "ADVANCED_OPERATOR_DIST",
-    "AND": "DISTANCE_SEPARATOR"
+    "DIST": "ADVANCED_OPERATOR_DIST"
 }
 
 program_keywords = {
     "BEGIN": "PROGRAM_BEGIN",
     "END": "PROGRAM_END"
+}
+
+special_keys = {
+    "AND": "DISTANCE_SEPARATOR"
 }
 
 is_first_run = True
@@ -406,7 +423,9 @@ for index, command in enumerate(commands):
     keyword = re.split('\\s+(?![^\\[]*\\])', command)
 
     try:
-        if (keyword[1] in reserved_keys) and not (keyword[0] in io_keywords):
+        if ((keyword[1] in reserved_keys)
+            and not (keyword[0] in io_keywords)
+            and not (keyword[0] in assignment_keyword)):
             raise Exception
         else:
             if keyword[0] in var_declaration_keywords: # VARSTR and VARINT keyword
