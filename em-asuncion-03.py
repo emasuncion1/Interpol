@@ -74,6 +74,8 @@ class UserIO:
             raise SystemExit
 
         if keyword == "PRINT" or keyword == "PRINTLN":
+            command = substitute_value(command)
+
             if command[1].startswith("\"") and command[1].endswith("\""):
                 print(self.print_user_input(command[1]))
             elif command[1].startswith("\"") and not command[1].endswith("\""):
@@ -293,7 +295,10 @@ class Assignment:
                 array = " ".join(str(e) for e in array)
                 print(f"----> {array}")
                 return
-            if array[1] in operator_keywords:
+
+            if array[1] in user_variables:
+                user_variables[array[3]] = user_variables.get(array[1])
+            elif array[1] in operator_keywords:
                 value = array[1:]
                 in_index = value.index("IN")
                 user_variables[array[in_index + 2]] = math.arithmetic(array[1:in_index + 1])
@@ -348,6 +353,13 @@ def substitute_value(array):
 
 def syntax_incorrect():
     print("Invalid syntax")
+
+def is_int(val):
+    try:
+        num = int(val)
+    except ValueError:
+        return False
+    return True
 
 def intersection(list1, list2):
     list3 = [value for value in list1 if value in list2]
@@ -507,4 +519,3 @@ tokens_table(token_commands)
 symbols_table(user_variables)
 
 print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
-print (user_variables)
