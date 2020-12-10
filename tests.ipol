@@ -1,8 +1,3 @@
 BEGIN
-PRINT [Enter year of birth: ]
-VARINT birthyear
-INPUT birthyear
-VARSTR lit WITH [You are ]
-VARINT year WITH 2019
-PRINTLN SUB year birthyear
+ADD 1
 END

@@ -1,5 +1,5 @@
 BEGIN
-VARSTR stringx WITH [#This is a string] #test
+VARSTR stringx WITH "#This is a string" #test
 VARINT intx WITH ADD 1 1
 VARINT intz WITH ROOT 16 2
 VARSTR x
@@ -7,5 +7,5 @@ VARINT y
 VARINT z
 STORE 100 IN y
 STORE intz IN z
-STORE [pagod] IN x
+STORE "pagod" IN x
 END

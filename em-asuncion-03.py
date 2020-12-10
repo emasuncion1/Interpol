@@ -26,10 +26,10 @@ class UserIO:
             # Check if filename does not end with .ipol (e.g. text.ipol)
             if not(filename[-5:] == ".ipol"):
                 print("Invalid file")
-                sys.exit(1)
+                raise SystemExit
             elif os.stat(filename).st_size == 0:
                 print("File is empty")
-                sys.exit(1)
+                raise SystemExit
             else:
                 # This is a valid .ipol file
                 # Check file
@@ -40,17 +40,17 @@ class UserIO:
                 return
         except FileNotFoundError:
             print("File not found")
-            sys.exit(1)
+            raise SystemExit
         except Exception:
             print("Invalid file")
-            sys.exit(1)
+            raise SystemExit
 
     def file_read(self, filename):
         with open(filename) as file:
             lines = file.readlines()
 
         for n, line in enumerate(lines, 1):
-            line = re.sub(r'\#(?=([^\[\]]*\[[^\[\]]*\[)*[^\[\]]*$).+', '',  line).strip()
+            line = re.sub(r'\#(?=([^\"]*\"[^\"]*\")*[^\"]*$).+', '',  line).strip()
             commands.append(line)
             commands_copy.append(line)
 
@@ -58,7 +58,7 @@ class UserIO:
             syntax_incorrect()
         elif not(commands[-1] == "END"):
             print("Invalid end of file")
-            sys.exit(1)
+            raise SystemExit
 
     def io_operations(self, command):
         keyword = command[0]
@@ -71,16 +71,15 @@ class UserIO:
                     user_variables[command[1]] = self.input_fn()
         except Exception:
             print(f"Invalid syntax")
-            sys.exit(1)
-
-        for index, item in enumerate(command):
-            if item in user_variables:
-                command[index] = str(user_variables.get(item))
+            raise SystemExit
 
         if keyword == "PRINT" or keyword == "PRINTLN":
-            if command[1].startswith("[") and command[1].endswith("]"):
+            if command[1].startswith("\"") and command[1].endswith("\""):
                 print(self.print_user_input(command[1]))
+            elif command[1].startswith("\"") and not command[1].endswith("\""):
+                raise Exception
             elif command[1] in operator_keywords:
+                command = substitute_value(command)
                 value_to_print = math.arithmetic(command[1:])
                 print(str(value_to_print))
             elif (command[1] in reserved_keys) and (command[1] not in operator_keywords):
@@ -120,9 +119,9 @@ class Math:
         try:
             # Substitute the variables to its equivalent value
             # if it is used as an expression
-            for index, var in enumerate(array):
-                if var in user_variables:
-                    array[index] = str(user_variables.get(var))
+            # for index, var in enumerate(array):
+            #     if var in user_variables:
+            #         array[index] = str(user_variables.get(var))
 
             for index_of_keyword in reversed(counter_array):
                 number1 = array[index_of_keyword + 1]
@@ -135,22 +134,31 @@ class Math:
                     number2 = user_variables.get(number2)
 
                 if array[index_of_keyword] == "MUL":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.multiply(number1, number2)
                 elif array[index_of_keyword] == "DIV":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.divide(number1, number2)
                 elif array[index_of_keyword] == "MOD":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.modulo(number1, number2)
                 elif array[index_of_keyword] == "ADD":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.add(number1, number2)
                 elif array[index_of_keyword] == "SUB":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.subtract(number1, number2)
                 elif array[index_of_keyword] == "RAISE":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.math_raise(number1, number2)
                 elif array[index_of_keyword] == "ROOT":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.root(number1, number2)
                 elif array[index_of_keyword] == "MEAN":
+                    array = substitute_value(array)
                     array[index_of_keyword] = self.mean(numbers_arr)
                 elif array[index_of_keyword] == "DIST":
+                    array = substitute_value(array)
                     if numbers_arr[2] == "AND":
                         numbers_arr.pop(2)
                     array[index_of_keyword] = self.dist(numbers_arr)
@@ -165,7 +173,7 @@ class Math:
             print(f"Invalid arithmetic operation at line number [ {index + 2} ]")
             array = " ".join(str(e) for e in array)
             print(f"----> {array}")
-            sys.exit(1)
+            raise SystemExit
 
     def add(self, x, y):
         return int(x) + int(y)
@@ -220,36 +228,47 @@ class Declaration:
                 print(f"Duplicate variable declaration at line number [ {index + 2} ]")
                 array = " ".join(str(e) for e in array)
                 print(f"----> {array}")
-                sys.exit(1)
+                raise SystemExit
 
             if array[0] == "VARSTR":
                 if not is_ascii(array[1]):
                     print(f"Invalid syntax at line number [ {index + 2} ]")
                     array = " ".join(str(e) for e in array)
                     print(f"----> {array}")
-                    sys.exit(1)
+                    raise SystemExit
 
                 if len(array) == 2:
-                    user_variables[array[1]] = ""
+                    if is_valid_identifier(array[1]):
+                        user_variables[array[1]] = ""
+                    else:
+                        raise Exception
                 elif len(array) > 2:
-                    if not array[3].startswith("["):
-                        print(f"Invalid data type at line number [ {index + 2} ]")
-                        array = " ".join(str(e) for e in array)
-                        print(f"----> {str(array)}")
-                        sys.exit(1)
+                    if not array[3].startswith("\""):
+                        raise Exception
+                    elif not is_valid_identifier(array[1]):
+                        raise Exception
                     elif is_ascii(array[3]):
                         user_variables[array[1]] = array[3]
                     else:
                         raise Exception
-                elif (not (array[2] == "WITH")) and (len(array) > 2):
-                    raise Exception
+                elif len(array) > 2 and (not (array[2] == "WITH")
+                        or (len(array) == 3)):
+                    print(f"Invalid expression at line number [ {index + 2} ]")
+                    array = " ".join(str(e) for e in array)
+                    print(f"----> {array}")
+                    raise SystemExit
             elif array[0] == "VARINT":
                 if len(array) == 2:
                     user_variables[array[1]] = 0
-                elif len(array) > 2 and array[3].startswith("["):
+                elif len(array) > 2 and array[3].startswith("\""):
                     raise Exception
                 elif (not (array[2] == "WITH")) and (len(array) > 2):
                     raise Exception
+                elif len(array) == 3 and (not (array[3] == "WITH")):
+                    print(f"Invalid expression at line number [ {index + 2} ]")
+                    array = " ".join(str(e) for e in array)
+                    print(f"----> {array}")
+                    raise SystemExit
                 elif (len(array) > 2) and (array[3] in operator_keywords):
                     user_variables[array[1]] = math.arithmetic(array[3:])
                 elif len(array) > 2:
@@ -257,18 +276,23 @@ class Declaration:
                         print(f"Invalid data type at line number [ {index + 2} ]")
                         array = " ".join(str(e) for e in array)
                         print(f"----> {array}")
-                        sys.exit(1)
+                        raise SystemExit
                     else:
                         user_variables[array[1]] = array[3]
         except Exception:
-            print(f"Incompatible data type at line number [ {index + 2} ]")
+            print(f"Invalid syntax at line number [ {index + 2} ]")
             array = " ".join(str(e) for e in array)
             print(f"----> {array}")
-            sys.exit(1)
+            raise SystemExit
 
 class Assignment:
     def assign_operations(self, array, index):
         try:
+            if not (len(array) == 4):
+                print(f"Invalid expression at line number [ {index + 2} ]")
+                array = " ".join(str(e) for e in array)
+                print(f"----> {array}")
+                return
             if array[1] in operator_keywords:
                 value = array[1:]
                 in_index = value.index("IN")
@@ -277,22 +301,21 @@ class Assignment:
                 print(f"Variable is not declared at line number [ {index + 2} ]")
                 array = " ".join(str(e) for e in array)
                 print(f"----> {array}")
-                sys.exit(1)
+                raise SystemExit
             elif (re.search(r'-?\d+', array[1]) and
                 type(user_variables.get(array[3])) is int):
-                if (array[1].startswith("[") or array[1].startswith("\"")
-                        or array[1].startswith("\'")):
+                if (array[1].startswith("\"")):
                     raise Exception
                 user_variables[array[3]] = int(array[1])
             elif type(user_variables.get(array[3])) is str:
-                if not array[1].startswith("["):
+                if not array[1].startswith("\""):
                     raise Exception
                 user_variables[array[3]] = array[1]
             else:
                 raise Exception
         except Exception:
             print(f"Invalid data type at line number [ {index + 2} ]")
-            sys.exit(1)
+            return
 
         try:
             if array[1] in user_variables:
@@ -301,7 +324,7 @@ class Assignment:
             print(f"Variable is not declared at line number [ {index + 2} ]")
             array = " ".join(str(e) for e in array)
             print(f"----> {array}")
-            sys.exit(1)
+            raise SystemExit
 
 # ----------------------------------------------------------------
 # Methods
@@ -311,8 +334,24 @@ def greet_user():
 def is_ascii(str):
     return all(ord(c) < 128 for c in str)
 
+def is_valid_identifier(str):
+    length = len(str) < 50
+    alpha = str[0].isalpha()
+    return length and alpha
+
+def substitute_value(array):
+    for index, item in enumerate(array):
+        if item in user_variables:
+            array[index] = str(user_variables.get(item))
+
+    return array
+
 def syntax_incorrect():
     print("Invalid syntax")
+
+def intersection(list1, list2):
+    list3 = [value for value in list1 if value in list2]
+    return list3
 
 def tokens_table(commands):
     print("\n========= INTERPOL LEXEMES/TOKENS TABLE =========")
@@ -321,20 +360,22 @@ def tokens_table(commands):
     for index, command in enumerate(commands):
         # print(command, index)
         for i, cmd in enumerate(command):
-            # print(command)
-            token_val = reserved_keys.get(cmd, "")
-            if token_val == "" and  cmd == "":
-                break
-            elif cmd.startswith("["):
-                cmd = cmd[1:-1]
-                token_val = "STRING"
-            elif re.search(r'-?\d+', cmd):
-                token_val = "NUMBER"
-            elif cmd in special_keys:
-                token_val = special_keys.get(cmd)
-            elif token_val == "" and not cmd == "":
-                token_val = "IDENTIFIER"
-            print("{:<12} {:<30} {:<40}".format(index + 1, token_val, cmd))
+            try:
+                token_val = reserved_keys.get(cmd, "")
+                if token_val == "" and  cmd == "":
+                    break
+                elif cmd.startswith("\""):
+                    cmd = cmd[1:-1]
+                    token_val = "STRING"
+                elif re.search(r'-?\d+', cmd):
+                    token_val = "NUMBER"
+                elif cmd in special_keys:
+                    token_val = special_keys.get(cmd)
+                elif token_val == "" and not cmd == "":
+                    token_val = "IDENTIFIER"
+                print("{:<12} {:<30} {:<40}".format(index + 1, token_val, cmd))
+            except Exception:
+                pass
 
         if command[0] == "END":
             print("{:<12} {:<30} {:<40}".format(index + 2, "END_OF_FILE", "EOF"))
@@ -404,6 +445,7 @@ user_input = ""
 commands = []
 commands_copy = []
 token_commands = []
+token_commands_copy = []
 user_variables =  {}
 reserved_keys = {**program_keywords, **var_declaration_keywords, **assignment_keyword, **io_keywords, **operator_keywords}
 
@@ -425,12 +467,13 @@ print("\n-------   OUTPUT START   --------->")
 commands = [x for x in commands if x]
 
 for index, command in enumerate(commands):
-    keyword = re.split('\\s+(?![^\\[]*\\])', command)
+    keyword = re.split(r'\s(?=(?:\"[^\"]*\"|[^\"])*$)', command)
+    token_commands.append(keyword)
 
     try:
-        if ((keyword[1] in reserved_keys)
+        if (((keyword[1] in reserved_keys)
             and not (keyword[0] in io_keywords)
-            and not (keyword[0] in assignment_keyword)):
+            and not (keyword[0] in assignment_keyword))):
             raise Exception
         else:
             if keyword[0] in var_declaration_keywords: # VARSTR and VARINT keyword
@@ -439,31 +482,29 @@ for index, command in enumerate(commands):
                 assignment.assign_operations(keyword, index)
             elif keyword[0] in io_keywords: # INPUT/PRINT/PRINTLN keywords
                 user.io_operations(keyword)
+            elif keyword[0] in operator_keywords:
+                math.arithmetic(keyword)
             elif keyword[0].startswith("\#"):
                 pass
             elif keyword[0] in program_keywords:
                 pass
-            else:
-                print(f"Invalid syntax at line number [ {index + 2} ]")
-                keyword = " ".join(str(e) for e in keyword)
-                print(f"----> {str(keyword)}")
-                sys.exit(1)
     except Exception:
-        print(f"Invalid expression at line number [ {index + 2} ]")
+        print(f"Invalid syntax at line number [ {index + 2} ]")
         keyword = " ".join(str(e) for e in keyword)
         print(f"----> {str(keyword)}")
-        sys.exit(1)
+    except SystemExit:
+        break
+
 
 print("<------   OUTPUT END   ----------\n")
 
 # Output the lexemes/tokens table
-for command in commands_copy:
-    keyword = re.split('\\s+(?![^\\[]*\\])', command)
-    token_commands.append(keyword)
-
+token_commands.insert(0, ["BEGIN"])
+token_commands.insert(len(token_commands), ["END"])
 tokens_table(token_commands)
 
 # Output symbols table
 symbols_table(user_variables)
 
 print("\n========  INTERPOL INTERPRETER TERMINATED  ========")
+print (user_variables)

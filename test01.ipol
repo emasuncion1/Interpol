@@ -1,5 +1,5 @@
 BEGIN
-VARSTR stringmo WITH [I have a pen]
+VARSTR stringmo WITH "I have a pen"
 PRINTLN stringmo
 VARINT x WITH ADD 1 SUB 9 9
 VARINT y

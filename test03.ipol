@@ -1,6 +1,6 @@
 BEGIN
 
-VARSTR stringmo WITH [Enter an integer: ]
+VARSTR stringmo WITH "Enter an integer: "
 PRINTLN stringmo
 VARINT var
 INPUT var

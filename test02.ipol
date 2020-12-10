@@ -1,4 +1,4 @@
 BEGIN
-VARSTR stringmo WITH "Enter an integer: "
+VARSTR 123 WITH "teet"
 INPUT stringmo
 END
